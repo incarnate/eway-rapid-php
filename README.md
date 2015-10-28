@@ -1,5 +1,9 @@
 # eWAY Rapid PHP Library
 
+[![Build Status](https://travis-ci.org/incarnate/eway-rapid-php.svg?branch=master)](https://travis-ci.org/incarnate/eway-rapid-php)
+[![Software License][ico-license]](LICENSE.md)
+[![Build Status][ico-travis]][link-travis]
+
 A PHP library to integrate with eWAY's Rapid Payment API.
 
 Sign up with eWAY at:
