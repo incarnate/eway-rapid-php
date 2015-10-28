@@ -193,6 +193,14 @@ class Client implements ClientContract
     /**
      * @inheritdoc
      */
+    public function updateCustomer($apiMethod, $customer)
+    {
+        return $this->_invoke(CreateCustomerResponse::getClass());
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function queryCustomer($tokenCustomerId)
     {
         return $this->_invoke(QueryCustomerResponse::getClass());
@@ -385,6 +393,54 @@ class Client implements ClientContract
             case ApiMethod::TRANSPARENT_REDIRECT:
                 $transaction->Payment = ['TotalAmount' => 0];
 
+                return $this->getHttpService()->postAccessCode($transaction->toArray());
+
+            default:
+                // Although right now this code is not reachable, protect against incomplete
+                // changes to ApiMethod
+                throw new MethodNotImplementedException();
+        }
+    }
+
+    /**
+     * 
+     * @param $apiMethod
+     * @param type $customer
+     * @return ResponseInterface
+     * @throws MethodNotImplementedException
+     */
+    private function _updateCustomer($apiMethod, $customer)
+    {
+        /** @var Customer $customer */
+        $customer = ClassValidator::getInstance('Eway\Rapid\Model\Customer', $customer);
+
+        $apiMethod = EnumValidator::validate('Eway\Rapid\Enum\ApiMethod', 'ApiMethod', $apiMethod);
+
+        $transaction = [
+            'Customer' => $customer->toArray(),
+            'Payment' => ['TotalAmount' => 0],
+            'Method' => PaymentMethod::UPDATE_TOKEN_CUSTOMER,
+            'TransactionType' => TransactionType::PURCHASE,
+        ];
+
+        if (isset($customer->RedirectUrl)) {
+            $transaction['RedirectUrl'] = $customer->RedirectUrl;
+        }
+        if (isset($customer->CancelUrl)) {
+            $transaction['CancelUrl'] = $customer->CancelUrl;
+        }
+
+        /** @var Transaction $transaction */
+        $transaction = ClassValidator::getInstance('Eway\Rapid\Model\Transaction', $transaction);
+
+        switch ($apiMethod) {
+            case ApiMethod::DIRECT:
+                return $this->getHttpService()->postTransaction($transaction->toArray());
+
+            case ApiMethod::RESPONSIVE_SHARED:
+                return $this->getHttpService()->postAccessCodeShared($transaction->toArray());
+
+            case ApiMethod::TRANSPARENT_REDIRECT:
                 return $this->getHttpService()->postAccessCode($transaction->toArray());
 
             default:
@@ -597,6 +653,9 @@ class Client implements ClientContract
             $hasRequestError = true;
         } elseif (preg_match('/5\d\d/', $response->getStatusCode())) {
             $this->_addError(self::ERROR_HTTP_SERVER_ERROR);
+            $hasRequestError = true;
+        } elseif ($response->getStatusCode() == 0) {
+            $this->_addError(self::ERROR_CONNECTION_ERROR);
             $hasRequestError = true;
         }
 
