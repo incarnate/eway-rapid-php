@@ -8,13 +8,9 @@ php:
 
 sudo: false
 
-env:
-  - COMPOSER_OPTS=""
-  - COMPOSER_OPTS="--prefer-lowest"
-
 before_install:
   - composer self-update
   - composer validate
 
 install:
-  - travis_retry composer update $COMPOSER_OPTS
+  - travis_retry composer update
