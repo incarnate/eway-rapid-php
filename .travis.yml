@@ -20,4 +20,4 @@ before_install:
   - composer validate
 
 install:
-  - travis_retry composer install --prefer-source --no-interaction --optimize-autoloader
+  - travis_retry composer install --prefer-dist --no-interaction --optimize-autoloader
