@@ -126,9 +126,7 @@ class Transaction extends AbstractModel
         
         // v40 fields
         'TransactionDateTime',
-        'FraudAction',
         'TransactionCaptured',
-        'CurrencyCode',
         'Source',
         'MaxRefund',
         'OriginalTransactionId',

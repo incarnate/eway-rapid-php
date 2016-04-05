@@ -15,7 +15,7 @@ trait HasTransactionTypeTrait
     public function setTransactionTypeAttribute($transactionType)
     {
         // Handle error response states
-        if ($transactionType != 'Unknown') {
+        if (!is_int($transactionType) && $transactionType != 'Unknown') {
             $this->validateEnum('Eway\Rapid\Enum\TransactionType', 'TransactionType', $transactionType);
         }
 

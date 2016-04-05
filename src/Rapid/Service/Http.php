@@ -387,7 +387,7 @@ class Http implements HttpServiceContract
             $options[CURLOPT_POSTFIELDS] = $jsonData;
         }
 
-        if (isset($this->version) && is_int($this->version)) {
+        if (isset($this->version) && is_numeric($this->version)) {
             $headers[] = 'X-EWAY-APIVERSION: '.$this->version;
         }
 
