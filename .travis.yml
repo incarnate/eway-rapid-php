@@ -12,6 +12,10 @@ matrix:
      - php: hhvm
        script: phpunit --testsuite integration
 
+env:
+ - EWAY_API_VERSION=31
+ - EWAY_API_VERSION=40
+
 cache:
     directories:
         - $HOME/.composer/cache

@@ -123,6 +123,15 @@ class Transaction extends AbstractModel
 
         'VerifyCustomerEmail',
         'VerifyCustomerPhone',
+        
+        // v40 fields
+        'TransactionDateTime',
+        'FraudAction',
+        'TransactionCaptured',
+        'CurrencyCode',
+        'Source',
+        'MaxRefund',
+        'OriginalTransactionId',
     ];
 
     /**
