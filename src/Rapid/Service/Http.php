@@ -29,6 +29,14 @@ class Http implements HttpServiceContract
     private $baseUrl;
 
     /**
+     * Extra proxy "Connection Established" header text
+     */
+    private static $CONNECTION_ESTABLISHED_HEADERS = array(
+        "HTTP/1.0 200 Connection established\r\n\r\n",
+        "HTTP/1.1 200 Connection established\r\n\r\n",
+    );
+
+    /**
      * @param $key
      * @param $password
      * @param $baseUrl
@@ -47,7 +55,14 @@ class Http implements HttpServiceContract
      */
     public function getTransaction($reference)
     {
-        return $this->_getRequest([self::API_TRANSACTION_QUERY, ['Reference' => $reference]]);
+        if (empty($reference)) {
+            throw new InvalidArgumentException();
+        }
+
+        return $this->getRequest([
+            self::API_TRANSACTION_QUERY,
+            ['Reference' => $reference]
+        ]);
     }
 
     /**
@@ -57,7 +72,14 @@ class Http implements HttpServiceContract
      */
     public function getTransactionInvoiceNumber($invoiceNumber)
     {
-        return $this->_getRequest([self::API_TRANSACTION_INVOICE_NUMBER_QUERY, ['InvoiceNumber' => $invoiceNumber]]);
+        if (empty($invoiceNumber)) {
+            throw new InvalidArgumentException();
+        }
+
+        return $this->getRequest([
+            self::API_TRANSACTION_INVOICE_NUMBER_QUERY,
+            ['InvoiceNumber' => $invoiceNumber]
+        ]);
     }
 
     /**
@@ -67,7 +89,14 @@ class Http implements HttpServiceContract
      */
     public function getTransactionInvoiceReference($invoiceReference)
     {
-        return $this->_getRequest([self::API_TRANSACTION_INVOICE_REFERENCE_QUERY, ['InvoiceReference' => $invoiceReference]]);
+        if (empty($invoiceReference)) {
+            throw new InvalidArgumentException();
+        }
+
+        return $this->getRequest([
+            self::API_TRANSACTION_INVOICE_REFERENCE_QUERY,
+            ['InvoiceReference' => $invoiceReference]
+        ]);
     }
 
     /**
@@ -77,7 +106,7 @@ class Http implements HttpServiceContract
      */
     public function postTransaction($data)
     {
-        return $this->_postRequest(self::API_TRANSACTION, $data);
+        return $this->postRequest(self::API_TRANSACTION, $data);
     }
 
     /**
@@ -88,7 +117,13 @@ class Http implements HttpServiceContract
      */
     public function postTransactionRefund($transactionId, $data)
     {
-        return $this->_postRequest([self::API_TRANSACTION_REFUND, ['TransactionID' => $transactionId]], $data);
+        return $this->postRequest(
+            [
+                self::API_TRANSACTION_REFUND,
+                ['TransactionID' => $transactionId]
+            ],
+            $data
+        );
     }
 
     /**
@@ -98,7 +133,7 @@ class Http implements HttpServiceContract
      */
     public function postAccessCodeShared($data)
     {
-        return $this->_postRequest(self::API_ACCESS_CODE_SHARED, $data);
+        return $this->postRequest(self::API_ACCESS_CODE_SHARED, $data);
     }
 
     /**
@@ -108,7 +143,14 @@ class Http implements HttpServiceContract
      */
     public function getAccessCode($accessCode)
     {
-        return $this->_getRequest([self::API_ACCESS_CODE_QUERY, ['AccessCode' => $accessCode]]);
+        if (empty($accessCode)) {
+            throw new InvalidArgumentException();
+        }
+
+        return $this->getRequest([
+            self::API_ACCESS_CODE_QUERY,
+            ['AccessCode' => $accessCode]
+        ]);
     }
 
     /**
@@ -118,7 +160,7 @@ class Http implements HttpServiceContract
      */
     public function postAccessCode($data)
     {
-        return $this->_postRequest(self::API_ACCESS_CODE, $data);
+        return $this->postRequest(self::API_ACCESS_CODE, $data);
     }
 
     /**
@@ -128,7 +170,14 @@ class Http implements HttpServiceContract
      */
     public function getCustomer($tokenCustomerId)
     {
-        return $this->_getRequest([self::API_CUSTOMER_QUERY, ['TokenCustomerID' => $tokenCustomerId]]);
+        if (empty($tokenCustomerId)) {
+            throw new InvalidArgumentException();
+        }
+
+        return $this->getRequest([
+            self::API_CUSTOMER_QUERY,
+            ['TokenCustomerID' => $tokenCustomerId]
+        ]);
     }
 
     /**
@@ -138,7 +187,7 @@ class Http implements HttpServiceContract
      */
     public function postCapturePayment($data)
     {
-        return $this->_postRequest(self::API_CAPTURE_PAYMENT, $data);
+        return $this->postRequest(self::API_CAPTURE_PAYMENT, $data);
     }
 
     /**
@@ -148,7 +197,17 @@ class Http implements HttpServiceContract
      */
     public function postCancelAuthorisation($data)
     {
-        return $this->_postRequest(self::API_CANCEL_AUTHORISATION, $data);
+        return $this->postRequest(self::API_CANCEL_AUTHORISATION, $data);
+    }
+
+    /**
+     * @param $query
+     *
+     * @return ResponseInterface
+     */
+    public function getSettlementSearch($query)
+    {
+        return $this->getRequest(self::API_SETTLEMENT_SEARCH, $query);
     }
 
     /**
@@ -240,9 +299,9 @@ class Http implements HttpServiceContract
      *
      * @return ResponseInterface
      */
-    private function _getRequest($url)
+    private function getRequest($url, $query = [])
     {
-        return $this->_request('GET', $url);
+        return $this->request('GET', $url, $query);
     }
 
     /**
@@ -251,9 +310,9 @@ class Http implements HttpServiceContract
      *
      * @return ResponseInterface
      */
-    private function _postRequest($url, $data)
+    private function postRequest($url, $data)
     {
-        return $this->_request('POST', $url, $data);
+        return $this->request('POST', $url, $data);
     }
 
     /**
@@ -263,7 +322,7 @@ class Http implements HttpServiceContract
      *
      * @return ResponseInterface
      */
-    private function _request($method, $uri, $data = [])
+    private function request($method, $uri, $data = [])
     {
         $uri = $this->getUri($uri);
 
@@ -276,6 +335,11 @@ class Http implements HttpServiceContract
         $agent = sprintf("%s %s", Client::NAME, Client::VERSION);
 
         $ch = curl_init();
+
+        if (strtoupper($method) === 'GET' && !empty($data)) {
+            $queryString = http_build_query($data);
+            $uri .= '?'.$queryString;
+        }
 
         $options = [
             CURLOPT_URL => $uri,
@@ -304,16 +368,58 @@ class Http implements HttpServiceContract
 
         $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $responseBody = substr($rawResponse, $headerSize);
 
-        if ($rawResponse === false) {
-           $responseBody = curl_error($ch);
+        if (curl_errno($ch)) {
+            $responseError = curl_error($ch);
+            $responseBody = '';
+        } else {
+            $responseError = '';
+            $responseBody = $this->parseResponse($rawResponse, $headerSize);
         }
 
-        $response = new Response($statusCode, $responseBody);
+        $response = new Response($statusCode, $responseBody, $responseError);
 
         curl_close($ch);
 
         return $response;
+    }
+
+     /**
+     * Returns the HTTP body from raw response.
+     *
+     * @param string $rawResponse
+     * @param string $headerSize
+     * @return string
+     */
+    private function parseResponse($rawResponse, $headerSize)
+    {
+        foreach (self::$CONNECTION_ESTABLISHED_HEADERS as $established_header) {
+            if (stripos($rawResponse, $established_header) !== false) {
+                $rawResponse = str_ireplace($established_header, '', $rawResponse);
+                // Older cURL versions did not account for proxy headers in the
+                // header size
+                if (!$this->needsCurlProxyFix()) {
+                    $headerSize -= strlen($established_header);
+                }
+                break;
+            }
+        }
+
+        $responseBody = substr($rawResponse, $headerSize);
+
+        return $responseBody;
+    }
+
+    /**
+     * Detect versions of cURL which report incorrect header lengths when
+     * using a proxy
+     *
+     * @return boolean
+     */
+    private function needsCurlProxyFix()
+    {
+        $ver = curl_version();
+        $versionNum = $ver['version_number'];
+        return $versionNum < self::CURL_NO_QUIRK_VERSION;
     }
 }

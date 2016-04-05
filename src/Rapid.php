@@ -16,7 +16,7 @@ use Eway\Rapid\Contract\Client as ClientContract;
  * <code>
  * $apiKey = 'YOUR-API-KEY';
  * $apiPassword = 'YOUR-API-PASSWORD';
- * $apiEndpoint = \Eway\Rapid\Contract::MODE_SANDBOX;
+ * $apiEndpoint = 'Sandbox';
  * $client = \Eway\Rapid::createClient($apiKey, $apiPassword, $apiEndpoint);
  * </code>
  *
@@ -31,19 +31,19 @@ abstract class Rapid
     private static $messages = null;
 
     /**
-     * Static method to create a new Rapid SDK Client object configured to communicate with a specific instance of the
-     * Rapid API. In some languages it may be appropriate to use a constructor with parameters instead of a static
-     * method.
+     * Static method to create a new Rapid Client object configured to communicate with a specific instance of the
+     * Rapid API.
      *
      * @param string $apiKey eWAY Rapid API key
      * @param string $apiPassword eWAY Rapid API password
-     * @param string $endpoint  eWAY Rapid API endpoint
+     * @param string $endpoint  eWAY Rapid API endpoint - one of 'Sandbox' or 'Production'
+     * @param Psr\Log\LoggerInterface $logger PSR-3 logger
      *
      * @return ClientContract an eWAY Rapid Client
      */
-    public static function createClient($apiKey, $apiPassword, $endpoint = ClientContract::MODE_SANDBOX)
+    public static function createClient($apiKey, $apiPassword, $endpoint = ClientContract::MODE_SANDBOX, $logger = null)
     {
-        return new Client($apiKey, $apiPassword, $endpoint);
+        return new Client($apiKey, $apiPassword, $endpoint, $logger);
     }
 
     /**
@@ -57,9 +57,9 @@ abstract class Rapid
      */
     public static function getMessage($errorCode, $language = 'en')
     {
-        self::_initMessages();
+        self::initMessages();
 
-        $messagesByLanguage = self::_getMessagesByLanguage($language);
+        $messagesByLanguage = self::getMessagesByLanguage($language);
         if (!array_key_exists($errorCode, $messagesByLanguage)) {
             return $errorCode;
         }
@@ -70,7 +70,7 @@ abstract class Rapid
     /**
      * @param string $language
      */
-    private static function _tryLoadingMessageFile($language)
+    private static function tryLoadingMessageFile($language)
     {
         $language = strtolower($language);
         $file = __DIR__.'/../resource/lang/'.$language.'.ini';
@@ -81,7 +81,7 @@ abstract class Rapid
 
     /**
      */
-    private static function _initMessages()
+    private static function initMessages()
     {
         if (null === self::$messages) {
             self::$messages = [];
@@ -93,18 +93,18 @@ abstract class Rapid
      *
      * @return array
      */
-    private static function _getMessagesByLanguage($language)
+    private static function getMessagesByLanguage($language)
     {
         $messages = [];
 
         if (!array_key_exists($language, self::$messages)) {
-            self::_tryLoadingMessageFile($language);
+            self::tryLoadingMessageFile($language);
         }
 
         if (array_key_exists($language, self::$messages)) {
             $messages = self::$messages[$language];
         } else {
-            self::_tryLoadingMessageFile('en');
+            self::tryLoadingMessageFile('en');
             if (array_key_exists('en', self::$messages)) {
                 $messages = self::$messages['en'];
             }
