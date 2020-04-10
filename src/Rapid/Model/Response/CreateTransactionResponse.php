@@ -65,6 +65,6 @@ class CreateTransactionResponse extends AbstractResponse
         'TransactionStatus',
         'TransactionType',
         'Verification',
-        'AmexECEncryptedData'
+        'AmexECEncryptedData',
     ];
 }

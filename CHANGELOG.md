@@ -2,6 +2,23 @@
 
 All notable changes will be documented in this file
 
+## 1.3.4
+
+ - Added extra fields to support customising the Responsive Shared Page when creating and updating token customers.
+
+## 1.3.3
+
+ - Fix so that `SecuredCardData` is passed when doing a token customer update
+
+## 1.3.2
+
+ - Added `SecuredCardData` field to Customer object for token creation with Secure Fields etc.
+
+## 1.3.1
+
+ - Added `SecuredCardData` field to support Secure Fields, Visa Checkout, AMEX Express Checkout and Android Pay
+ - `ThirdPartyWalletID` marked as deprecated, SecuredCardData should be used instead.
+
 ## 1.3.0
 
  - Added support for setting a Rapid version
