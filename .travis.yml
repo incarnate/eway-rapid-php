@@ -6,13 +6,14 @@ php:
   - 7.1
   - 7.2
   - 7.3
-  - 7.4
 
 jobs:
   include:
     - php: 5.6
+      env: EWAY_API_VERSION=31
       dist: xenial
     - php: 5.6
+      env: EWAY_API_VERSION=40
       dist: xenial
   fast_finish: true
 
@@ -30,3 +31,7 @@ before_install:
 
 install:
   - COMPOSER_MEMORY_LIMIT=-1 travis_retry composer install --prefer-dist --no-interaction --optimize-autoloader
+
+script:
+  - composer phpcs
+  - composer test
